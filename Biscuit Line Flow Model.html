@@ -1,0 +1,935 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Eds Bakery Simulator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Patrick+Hand&display=swap">
+<style>
+:root {
+  --paper: #fbfaf6;
+  --ink: #1d1d1f;
+  --muted: #6b6a66;
+  --dot: #d8d4c8;
+  --blue: #7f9bd0;
+  --yellow: #f3cf78;
+  --red: #e0484f;
+  --brown: #b07a45;
+  --green: #3fa45a;
+  --steel: #c3c8cf;
+  --sketch: 14px 5px 16px 6px / 6px 16px 5px 14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c1e;
+    --ink: #ece9e1;
+    --muted: #9d9b93;
+    --dot: #2e2f33;
+    --blue: #8aa7de;
+    --yellow: #e0b860;
+    --red: #ef6b6b;
+    --brown: #c08a52;
+    --green: #5cc27a;
+    --steel: #b4bac3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c1e;
+  --ink: #ece9e1;
+  --muted: #9d9b93;
+  --dot: #2e2f33;
+  --blue: #8aa7de;
+  --yellow: #e0b860;
+  --red: #ef6b6b;
+  --brown: #c08a52;
+  --green: #5cc27a;
+  --steel: #b4bac3;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--dot) 1.1px, transparent 1.5px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font: 19px/1.35 "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive, system-ui, sans-serif;
+  padding-block: 20px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+*, *::before, *::after { box-sizing: border-box; }
+.wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+h1 { font-family: "Kalam", cursive; font-size: 30px; font-weight: 700; margin: 0; line-height: 1.2; }
+.hl { background: linear-gradient(transparent 58%, var(--yellow) 58%, var(--yellow) 94%, transparent 94%); padding: 0 4px; }
+h2 { font-family: "Patrick Hand", cursive; font-weight: 400; font-size: 21px; margin: 0 0 10px; }
+.muted { color: var(--muted); font-size: 16px; margin: 0; line-height: 1.2; }
+.mono { font-family: "Kalam", cursive; font-variant-numeric: tabular-nums; }
+a { color: var(--red); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+.panel {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: var(--sketch);
+  padding: 16px 20px;
+}
+.controls { display: flex; flex-wrap: wrap; gap: 14px 26px; align-items: center; }
+.clock-label { display: block; color: var(--muted); font-size: 16px; }
+.clock { font-family: "Kalam", cursive; font-size: 36px; font-weight: 700; line-height: 1.1; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; }
+button {
+  font: 400 19px "Patrick Hand", cursive; padding: 6px 16px; cursor: pointer;
+  border: 2px solid var(--ink); border-radius: var(--sketch);
+  background: var(--paper); color: var(--ink);
+}
+button:hover:not(:disabled) { background: var(--yellow); }
+button.primary { background: var(--yellow); }
+button.ghost { border-style: dashed; }
+button.rework { font-size: 16px; padding: 1px 10px; color: var(--red); border-color: var(--red); }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible, input:focus-visible { outline: 2px dashed var(--red); outline-offset: 3px; }
+a { color: var(--ink); text-decoration-color: var(--red); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+a:hover { color: var(--red); }
+.toggles { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; color: var(--ink); }
+.toggle { display: flex; gap: 8px; align-items: center; font-size: 18px; flex-wrap: wrap; }
+.toggle input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--red); }
+input.pct, .rates input {
+  font: 400 19px "Kalam", cursive; padding: 4px 8px; width: 80px;
+  border: 2px solid var(--ink); border-radius: 8px 3px 9px 3px; background: var(--paper); color: var(--ink);
+}
+
+.summary { display: flex; flex-wrap: wrap; gap: 8px 30px; font-size: 19px; }
+.summary strong { font-family: "Kalam", cursive; font-weight: 700; color: var(--red); font-size: 22px; font-variant-numeric: tabular-nums; }
+/* Reserve room for each number so the row doesn't shift as values change width. */
+.summary strong { display: inline-block; min-width: var(--w, 5ch); }
+
+/* Stations run left to right. Each card takes its colour from the order it sits in. */
+.stations { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+@media (min-width: 900px) {
+  .stations { grid-template-columns: 0.8fr repeat(5, 1fr) 0.8fr; }
+}
+.station {
+  --station: var(--steel);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: var(--sketch);
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 12px;
+  min-width: 0;
+  transform: rotate(-0.5deg);
+}
+.station:nth-child(even) { transform: rotate(0.4deg); }
+.station:nth-child(1) { --station: var(--brown); }
+.station:nth-child(2) { --station: var(--blue); }
+.station:nth-child(3) { --station: var(--steel); }
+.station:nth-child(4) { --station: var(--yellow); }
+.station:nth-child(5) { --station: var(--steel); }
+.station:nth-child(6) { --station: var(--brown); }
+.station:nth-child(7) { --station: var(--green); }
+.station.slim { padding: 12px; }
+.station.slim h2 { font-size: 18px; }
+
+.station-head { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.station-head > div { min-width: 0; }
+.icon { width: 46px; height: 46px; flex: none; }
+.station h2 {
+  display: inline-block;
+  background: var(--station);
+  color: #1d1d1f;
+  padding: 0 6px;
+  border-radius: 6px 3px 7px 3px;
+  line-height: 1.25;
+  margin: 0 0 6px;
+}
+
+.pairs { display: flex; gap: 18px; }
+.pair { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.pair .n { font-family: "Kalam", cursive; font-size: 34px; font-weight: 700; line-height: 1.05; }
+.pair.wait .n { color: var(--ink); }
+.pair.prog .n { color: var(--red); }
+.pair.sold .n { color: var(--green); }
+.pair .l { font-size: 16px; color: var(--muted); }
+
+.progress { display: flex; flex-direction: column; gap: 6px; min-height: 14px; }
+.bar {
+  height: 14px; background: var(--paper); overflow: hidden;
+  border: 2px solid var(--ink); border-radius: 9px 4px 10px 4px;
+}
+.bar i {
+  display: block; height: 100%; background: var(--station);
+  border-right: 2px solid var(--ink);
+  transition: width .2s linear;
+}
+.progress-label { color: var(--muted); font-size: 16px; }
+.label-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; }
+
+.out {
+  display: flex; justify-content: space-between; gap: 8px;
+  margin-top: auto;
+  border-top: 2px dashed var(--ink); padding-top: 8px;
+  font-size: 17px;
+}
+.busy { font-family: "Kalam", cursive; font-weight: 700; color: var(--green); }
+.out .mono { color: var(--ink); }
+
+.rates { display: grid; grid-template-columns: minmax(120px, 160px) 90px 1fr; gap: 10px 14px; align-items: center; font-size: 18px; }
+.rates-foot { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.rates-foot .muted { max-width: 60ch; }
+.info { color: var(--muted); font-size: 16px; }
+.station-grid { grid-template-columns: minmax(110px, 160px) 90px 90px 1fr; }
+.col-head { color: var(--muted); font-size: 15px; }
+@media (max-width: 560px) {
+  .station-grid { grid-template-columns: minmax(90px, 1fr) 80px 80px; }
+  .station-grid > :nth-child(4n) { grid-column: 1 / -1; margin-top: -6px; }
+}
+
+.bar-icons { margin-left: auto; display: flex; gap: 10px; }
+button.icon-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 42px; padding: 6px 9px; }
+
+/* Settings and Assumptions open as modal dialogs. */
+dialog.dlg {
+  width: min(760px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto;
+  padding: 0; border: 2px solid var(--ink); border-radius: var(--sketch);
+  background: var(--paper); color: var(--ink);
+}
+dialog.dlg::backdrop { background: rgb(0 0 0 / .4); }
+.dlg-head {
+  position: sticky; top: 0; z-index: 1; background: var(--paper);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 20px 8px; border-bottom: 2px dashed var(--dot);
+}
+.dlg-head h2 { margin: 0; }
+.dlg-body { padding: 12px 20px 20px; font-size: 17px; }
+#aboutDlg .dlg-body { color: var(--muted); }
+.sub { font-family: "Patrick Hand", cursive; font-weight: 400; font-size: 19px; color: var(--ink); margin: 18px 0 8px; }
+.dlg-body > .toggles { margin-top: 4px; }
+.dlg ul { margin: 0; padding-left: 20px; }
+.dlg li { margin-bottom: 6px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <h1><span class="hl">Eds Bakery Simulator</span></h1>
+    <p class="muted">Trays waiting and in progress at each station, left to right. Time moves in whole minutes.</p>
+  </header>
+
+  <section class="panel controls" aria-label="Controls">
+    <div>
+      <span class="clock-label">Elapsed (h:mm)</span>
+      <span id="clock" class="clock">00:00</span>
+    </div>
+    <div class="btns">
+      <button type="button" data-step="1">+1 min</button>
+      <button type="button" data-step="5">+5 min</button>
+      <button type="button" data-step="20">+20 min</button>
+      <button type="button" data-step="60">+1 hr</button>
+      <button type="button" data-step="480">+8 hr</button>
+      <button type="button" id="finish">Finish day</button>
+      <button type="button" id="pause" class="ghost" disabled>Pause</button>
+      <button type="button" id="reset" class="ghost">Reset</button>
+    </div>
+    <div class="bar-icons">
+      <button type="button" class="icon-btn" id="openAbout" aria-label="Assumptions" title="Assumptions">?</button>
+      <button type="button" class="icon-btn" id="openSettings" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <section class="panel summary" aria-label="Totals">
+    <span>Trays in progress: <strong id="wip" style="--w:5ch">0</strong></span>
+    <span>Money: <strong id="money" style="--w:9ch">£0.00</strong></span>
+    <span title="How long a tray released into the Mixer's queue now would take to be boxed, if cycle times stayed at their normal length">Lead time, new tray: <strong id="lead" style="--w:6ch">00:00</strong></span>
+    <span title="Average time from mix being released into the Mixer's queue to the tray being boxed, over every tray boxed so far">Avg lead time: <strong id="avgLead" style="--w:6ch">—</strong></span>
+  </section>
+
+  <section class="stations" id="stations" aria-label="Stations"></section>
+
+
+</div>
+
+<dialog id="settingsDlg" class="dlg" aria-labelledby="settingsTitle">
+  <div class="dlg-head"><h2 id="settingsTitle">Settings</h2><button type="button" class="icon-btn" data-close aria-label="Close">✕</button></div>
+  <div class="dlg-body">
+    <div class="toggles">
+    <label class="toggle">
+      <input type="checkbox" id="fullBatch" checked>
+      Oven waits for a full batch
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="quickMode">
+      Quick mode (no animation)
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="randomMode">
+      Random cycle times ±
+      <input id="randomPct" type="number" min="0" max="100" step="1" value="20" class="pct">%
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="showRework">
+      Rework buttons
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="busyFromFirst" checked>
+      Busy % from each station's first item
+    </label>
+    </div>
+    <h3 class="sub">Supply and demand (per hour)</h3>
+    <div class="rates" id="rates"></div>
+    <h3 class="sub">Stations</h3>
+    <div class="rates station-grid" id="times"></div>
+    <div class="rates-foot">
+      <p class="muted">The checkboxes apply straight away. Rates, batch sizes and process times apply when you press Apply and restart. A station's rate is its batch size × 60 ÷ its process time; for the cooling rack the batch size is the number of slots.</p>
+      <div class="btns"><button type="button" id="apply" class="primary">Apply and restart</button></div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="aboutDlg" class="dlg" aria-labelledby="aboutTitle">
+  <div class="dlg-head"><h2 id="aboutTitle">Assumptions</h2><button type="button" class="icon-btn" data-close aria-label="Close">✕</button></div>
+  <div class="dlg-body">
+      <ul>
+        <li>Store cupboard releases mix into the Mixer's queue at the set rate. Blank means no limit.</li>
+        <li>Sale rate caps how many trays can be sold per hour. Boxed trays go to Ready to ship and are sold from there; trays made above the sale rate wait there unsold and earn nothing, but still cost £1 each to start. Selling capacity that goes unused because nothing was ready (for example while the line is filling up) is not saved up for later. Blank means no limit: every boxed tray sells straight away.</li>
+        <li>Money: £1 is spent for each tray started at the Mixer, and £1.50 is earned for each tray sold. Trays boxed but not yet sold earn nothing.</li>
+        <li>Batch sizes and process times below are the defaults and can be changed in Settings.</li>
+        <li>Mixer needs a full batch of mix to start (1 tray's worth by default). Each batch takes 5 minutes and goes to the Tray-er queue when finished.</li>
+        <li>Tray-er takes 1 minute per batch of 1 tray.</li>
+        <li>Oven bakes batches of 4 trays, takes 20 minutes per batch and locks while cooking. By default it waits for a full batch; untick the checkbox to start with whatever is waiting.</li>
+        <li>Cooling rack takes 30 minutes per tray and has 6 slots. Its batch size is the number of slots.</li>
+        <li>Busy % is the share of time a station's slots were in use. With "Busy % from each station's first item" ticked, it only counts from the minute the station first had anything waiting or in progress, so the wait for the first item to reach it at the start is left out. Before then it shows "—". After Finish day, each station stops counting once it has processed its last item and nothing more can reach it, so the idle time at the end of the day is left out too.</li>
+        <li>Boxer takes 1 minute per batch of 1 tray.</li>
+        <li>Ready to ship counts boxed trays waiting to be sold; Sold counts trays that have been sold.</li>
+        <li>Lead time, new tray: how long (h:mm) a tray whose mix joined the back of the Mixer's queue now would take to be boxed (ready to ship, not sold). It runs a copy of the line forward from now, first in, first out, with normal cycle times even when random cycle times are on. It shows "—" after Finish day and "&gt;7 days" if the tray would not be boxed within a week.</li>
+        <li>Avg lead time: the average time (h:mm, to the nearest minute) from a tray's mix being released into the Mixer's queue to that tray being boxed, over every tray boxed so far. Trays are matched first in, first out. It shows "—" until the first tray is boxed.</li>
+        <li>Finish day stops the store cupboard releasing mix and the Mixer starting new batches, then runs until no trays are left on the line. While finishing, the oven bakes part batches so it doesn't wait for trays that will never come. Reset starts a new day.</li>
+        <li>Rework (turn on its buttons in Settings), on each station, means the work in progress there has to be done again: the batch restarts its cycle from zero (a new cycle time is drawn if random cycle times are on). On the cooling rack it restarts the one tray closest to done. Nothing is lost and it costs no extra money; it just takes longer and keeps the station busy.</li>
+        <li>Random cycle times: each cycle is shorter by the set % (25%), normal (50%) or longer by the set % (25%). The change is rounded to whole minutes and cycles never go below 1 minute. Stations with short cycles, such as the Tray-er and Boxer, cannot vary by a fraction of a minute.</li>
+      </ul>
+  </div>
+</dialog>
+
+<script>
+// Process time per cycle, in whole minutes. Set in Settings.
+const DEFAULT_TIME = { mix: 5, tray: 1, oven: 20, cool: 30, box: 1 };
+let TIME = { ...DEFAULT_TIME };
+const LABEL = { store: "Store cupboard", sale: "Sale rate", mix: "Mixer", tray: "Tray-er", oven: "Oven", cool: "Cooling rack", box: "Boxer" };
+// Trays per batch at each station (for the cooling rack, the number of slots). Set in Settings.
+const DEFAULT_BATCH = { mix: 1, tray: 1, oven: 4, cool: 6, box: 1 };
+let BATCH = { ...DEFAULT_BATCH };
+// store: mix released per hour into the Mixer. sale: trays sold per hour.
+// null means no limit.
+const DEFAULT_RATE = { store: null, sale: null };
+const COST_PER_START = 1;   // £ spent per tray started
+const PRICE_PER_SOLD = 1.5; // £ earned per tray sold
+
+const SVG = (inner) =>
+  '<svg viewBox="0 0 48 48" class="icon" style="stroke:var(--ink)" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
+const ICON = {
+  store: SVG('<rect x="10" y="6" width="28" height="36" rx="3" fill="var(--brown)"/><path d="M24 6v36"/><circle cx="20" cy="24" r="1.6" fill="var(--ink)"/><circle cx="28" cy="24" r="1.6" fill="var(--ink)"/>'),
+  mix: SVG('<rect x="15" y="6" width="18" height="12" rx="4" fill="var(--blue)"/><path d="M24 18v6"/><path d="M8 24h32c0 9-7 14-16 14S8 33 8 24z" fill="var(--blue)"/>'),
+  tray: SVG('<rect x="5" y="14" width="38" height="20" rx="3" fill="var(--steel)"/><circle cx="14" cy="24" r="3.5" fill="var(--brown)"/><circle cx="24" cy="24" r="3.5" fill="var(--brown)"/><circle cx="34" cy="24" r="3.5" fill="var(--brown)"/>'),
+  oven: SVG('<rect x="8" y="6" width="32" height="36" rx="3" fill="var(--paper)"/><rect x="13" y="13" width="22" height="18" fill="var(--yellow)"/><path d="M13 36h22"/>'),
+  cool: SVG('<path d="M14 6v36M34 6v36"/><path d="M14 12h20M14 20h20M14 28h20M14 36h20"/>'),
+  box: SVG('<path d="M8 20l16-8 16 8v18l-16 6-16-6z" fill="var(--brown)"/><path d="M8 20l16 8 16-8M24 28v18"/>'),
+  ready: SVG('<rect x="8" y="10" width="32" height="28" rx="3" fill="var(--green)"/><path d="M16 24l6 6 10-12"/>')
+};
+
+let RATE = { ...DEFAULT_RATE };
+let CFG = {};
+let FULL = true;
+let RANDOM = false;
+let RANDOM_PCT = 20;
+let BUSY_FROM_FIRST = true;
+let SHOW_REWORK = false;
+let S;
+
+function applyConfig() {
+  CFG = {
+    mixBatch: BATCH.mix,
+    trayBatch: BATCH.tray,
+    ovenBatch: BATCH.oven,
+    coolSlots: BATCH.cool,
+    boxBatch: BATCH.box
+  };
+}
+
+// Cycle time for one batch or tray. With randomness on, the cycle is the base time
+// changed by -P%, 0% or +P%, with 25%, 50% and 25% chances, rounded to whole minutes.
+// The error scales with the base time, so a 30 min cycle varies more than a 5 min one.
+function dur(base) {
+  if (!RANDOM) return base;
+  const r = Math.random();
+  const x = r < 0.25 ? -RANDOM_PCT / 100 : r < 0.75 ? 0 : RANDOM_PCT / 100;
+  return Math.max(1, Math.round(base * (1 + x)));
+}
+
+function fresh() {
+  return {
+    t: 0,
+    closing: false,                    // true after Finish day: nothing new goes into the line
+    mix: null, mixQ: 0, storeAcc: 0, saleAcc: 0, money: 0,   // mixer: { start, until, n } while working; mixQ = mix waiting
+    trayQ: 0, tray: null,              // tray-er: { start, until, n } while working
+    ovenQ: 0, oven: null,              // oven: { start, until, n } while a batch is cooking
+    coolQ: 0, cool: [],                // cooling: [{ start, until }] one per tray in a slot
+    boxQ: 0, box: null,                // boxer: { start, until, n } while packing
+    ready: 0,                          // boxed trays waiting to be sold
+    entries: [],                       // [minute released, trays] for trays not yet boxed, oldest first
+    leadSum: 0,                        // total minutes from release to boxed, over trays boxed
+    done: { store: [], mix: [], tray: [], oven: [], cool: [], box: [], sold: [] },
+    totals: { store: 0, mix: 0, tray: 0, oven: 0, cool: 0, box: 0, sold: 0 },
+    busy: { mix: 0, tray: 0, oven: 0, cool: 0, box: 0 },  // busy time, counted as share of slots in use
+    first: { mix: null, tray: null, oven: null, cool: null, box: null },  // minute each station first had an item
+    last: { mix: null, tray: null, oven: null, cool: null, box: null }    // latest minute each station had work to do
+  };
+}
+
+function pad(n) { return String(n).padStart(2, "0"); }
+function fmt(t) { return pad(Math.floor(t / 60)) + ":" + pad(t % 60); }
+
+function releaseMix(n, t) {
+  S.entries.push([t, n]);
+  S.mixQ += n;
+  S.totals.store += n;
+  S.done.store.push([t, n]);
+}
+
+function tick() {
+  const s = S;
+  s.t += 1;
+  const t = s.t;
+
+  // Sale allowance builds up each minute (only used when a sale rate is set).
+  if (RATE.sale !== null) s.saleAcc += RATE.sale / 60;
+
+  // 0. Store cupboard releases mix into the mixer's waiting queue (not after Finish day).
+  if (s.closing) {
+    // nothing released
+  } else if (RATE.store === null) {
+    const need = CFG.mixBatch - s.mixQ;
+    if (need > 0) releaseMix(need, t);
+  } else {
+    s.storeAcc += RATE.store / 60;
+    const whole = Math.floor(s.storeAcc);
+    if (whole > 0) {
+      s.storeAcc -= whole;
+      releaseMix(whole, t);
+    }
+  }
+
+  // 1. Mixer finishes a batch, then starts the next once it has a full batch of mix.
+  if (s.mix && t >= s.mix.until) {
+    s.trayQ += s.mix.n;
+    s.done.mix.push([t, s.mix.n]);
+    s.totals.mix += s.mix.n;
+    s.mix = null;
+  }
+  if (!s.mix && !s.closing && s.mixQ >= CFG.mixBatch) {
+    const n = CFG.mixBatch;
+    s.mixQ -= n;
+    s.money -= n * COST_PER_START;
+    s.mix = { start: t, until: t + dur(TIME.mix), n };
+  }
+
+  // 2. Tray-er finishes its batch, then takes the next one from its queue.
+  if (s.tray && t >= s.tray.until) {
+    s.ovenQ += s.tray.n;
+    s.done.tray.push([t, s.tray.n]);
+    s.totals.tray += s.tray.n;
+    s.tray = null;
+  }
+  if (!s.tray && s.trayQ > 0) {
+    const n = Math.min(s.trayQ, CFG.trayBatch);
+    s.trayQ -= n;
+    s.tray = { start: t, until: t + dur(TIME.tray), n };
+  }
+
+  // 3. Oven releases a finished batch, then loads the next one.
+  if (s.oven && t >= s.oven.until) {
+    s.coolQ += s.oven.n;
+    s.done.oven.push([t, s.oven.n]);
+    s.totals.oven += s.oven.n;
+    s.oven = null;
+  }
+  // While finishing the day, no more trays are coming, so bake whatever is waiting.
+  if (!s.oven && s.ovenQ > 0 && (!FULL || s.closing || s.ovenQ >= CFG.ovenBatch)) {
+    const n = Math.min(s.ovenQ, CFG.ovenBatch);
+    s.ovenQ -= n;
+    s.oven = { start: t, until: t + dur(TIME.oven), n };
+  }
+
+  // 4. Cooling rack releases finished trays, then fills free slots.
+  const finished = s.cool.filter(c => c.until <= t).length;
+  if (finished) {
+    s.cool = s.cool.filter(c => c.until > t);
+    s.boxQ += finished;
+    s.done.cool.push([t, finished]);
+    s.totals.cool += finished;
+  }
+  const free = CFG.coolSlots - s.cool.length;
+  const start = Math.min(free, s.coolQ);
+  for (let i = 0; i < start; i++) s.cool.push({ start: t, until: t + dur(TIME.cool) });
+  s.coolQ -= start;
+
+  // 5. Boxer finishes its batch into Ready to ship, then takes the next one.
+  if (s.box && t >= s.box.until) {
+    // Match the boxed trays to the oldest releases for the average lead time.
+    for (let need = s.box.n; need > 0;) {
+      const e = s.entries[0];
+      const take = Math.min(e[1], need);
+      s.leadSum += take * (t - e[0]);
+      need -= take;
+      e[1] -= take;
+      if (e[1] === 0) s.entries.shift();
+    }
+    s.ready += s.box.n;
+    s.done.box.push([t, s.box.n]);
+    s.totals.box += s.box.n;
+    s.box = null;
+  }
+  if (!s.box && s.boxQ > 0) {
+    const n = Math.min(s.boxQ, CFG.boxBatch);
+    s.boxQ -= n;
+    s.box = { start: t, until: t + dur(TIME.box), n };
+  }
+
+  // 6. Sales from Ready to ship. With no sale rate everything sells at once; otherwise
+  // only what the allowance covers. Only sold trays earn money.
+  const sold = RATE.sale === null ? s.ready : Math.min(s.ready, Math.floor(s.saleAcc));
+  if (sold > 0) {
+    s.ready -= sold;
+    if (RATE.sale !== null) s.saleAcc -= sold;
+    s.money += sold * PRICE_PER_SOLD;
+    s.done.sold.push([t, sold]);
+    s.totals.sold += sold;
+  }
+  // Unused allowance isn't saved up: with nothing ready to sell, that demand is gone,
+  // so at most one minute's worth (and at least one tray) carries over.
+  if (RATE.sale !== null && s.ready === 0) s.saleAcc = Math.min(s.saleAcc, Math.max(1, RATE.sale / 60));
+
+  // 7. Busy time: each minute adds the share of slots in use (for example, 2 of 4 oven slots = 0.5).
+  if (s.mix) s.busy.mix += s.mix.n / CFG.mixBatch;
+  if (s.tray) s.busy.tray += s.tray.n / CFG.trayBatch;
+  if (s.oven) s.busy.oven += s.oven.n / CFG.ovenBatch;
+  s.busy.cool += s.cool.length / CFG.coolSlots;
+  if (s.box) s.busy.box += s.box.n / CFG.boxBatch;
+
+  // 8. First and latest minute each station had anything waiting or in progress.
+  // After Finish day the Mixer won't start the mix left in its queue, so that doesn't count.
+  const has = stationHas(s);
+  for (const k in has) {
+    if (!has[k]) continue;
+    if (s.first[k] === null) s.first[k] = t;
+    s.last[k] = t;
+  }
+}
+
+const STATIONS = ["mix", "tray", "oven", "cool", "box"];
+function stationHas(s) {
+  return {
+    mix: (!s.closing && s.mixQ) || s.mix, tray: s.trayQ || s.tray, oven: s.ovenQ || s.oven,
+    cool: s.coolQ || s.cool.length, box: s.boxQ || s.box
+  };
+}
+// After Finish day, a station is done once it and every station before it are empty:
+// nothing more can reach it.
+function stationDone(s, k) {
+  if (!s.closing) return false;
+  const has = stationHas(s);
+  return STATIONS.slice(0, STATIONS.indexOf(k) + 1).every(j => !has[j]);
+}
+
+// Trays in progress: everything started at the Mixer and not yet boxed.
+function wip(s) {
+  return (s.mix ? s.mix.n : 0) + s.trayQ + (s.tray ? s.tray.n : 0) + s.ovenQ + (s.oven ? s.oven.n : 0) +
+    s.coolQ + s.cool.length + s.boxQ + (s.box ? s.box.n : 0);
+}
+
+// Lead time for a new tray: runs a copy of the line forward with normal cycle times
+// until everything ahead of it (boxed so far, trays on the line, mix already waiting)
+// plus the new tray itself has been boxed. The line is first in, first out.
+// Returns minutes, null after Finish day (nothing new can go in), or Infinity past 7 days.
+const LEAD_CAP = 7 * 24 * 60;
+function leadTime() {
+  const real = S, realRandom = RANDOM;
+  if (real.closing) return null;
+  const copy = structuredClone({ ...real, done: null });
+  copy.done = { store: [], mix: [], tray: [], oven: [], cool: [], box: [], sold: [] };
+  const target = real.totals.box + wip(real) + real.mixQ + 1;
+  S = copy;
+  RANDOM = false;
+  try {
+    while (S.totals.box < target) {
+      if (S.t - real.t >= LEAD_CAP) return Infinity;
+      tick();
+    }
+    return S.t - real.t;
+  } finally {
+    S = real;
+    RANDOM = realRandom;
+  }
+}
+
+function winSum(arr, t) {
+  let sum = 0;
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i][0] <= t - 60) break;
+    sum += arr[i][1];
+  }
+  return sum;
+}
+
+function rate(arr) {
+  const t = S.t;
+  if (t === 0) return 0;
+  return winSum(arr, t) * 60 / Math.min(60, t);
+}
+
+function r1(x) { return (Math.round(x * 10) / 10).toString(); }
+function pct(item) {
+  const frac = (S.t - item.start) / (item.until - item.start);
+  return Math.max(0, Math.min(100, frac * 100)).toFixed(1);
+}
+function bar(p) { return '<div class="bar"><i style="width:' + p + '%"></i></div>'; }
+
+function render() {
+  const s = S;
+  document.getElementById("clock").textContent = fmt(s.t);
+
+  const stations = [
+    {
+      key: "mix", name: "Mixer", icon: ICON.mix, rule: "Batch of " + CFG.mixBatch + " every " + TIME.mix + " min",
+      waiting: s.mixQ,
+      inProgress: s.mix ? s.mix.n : 0,
+      bars: s.mix ? [bar(pct(s.mix))] : [],
+      label: s.mix ? "Mixing " + s.mix.n : "Waiting for mix"
+    },
+    {
+      key: "tray", name: "Tray-er", icon: ICON.tray, rule: "Batch of " + CFG.trayBatch + " every " + TIME.tray + " min",
+      waiting: s.trayQ,
+      inProgress: s.tray ? s.tray.n : 0,
+      bars: s.tray ? [bar(pct(s.tray))] : [],
+      label: s.tray ? "Placing " + s.tray.n : "Idle"
+    },
+    {
+      key: "oven", name: "Oven", icon: ICON.oven, rule: "Batch of " + CFG.ovenBatch + " every " + TIME.oven + " min",
+      waiting: s.ovenQ,
+      inProgress: s.oven ? s.oven.n : 0,
+      bars: s.oven ? [bar(pct(s.oven))] : [],
+      label: s.oven ? "Baking " + s.oven.n : "Empty"
+    },
+    {
+      key: "cool", name: "Cooling rack", icon: ICON.cool, rule: CFG.coolSlots + " slots, " + TIME.cool + " min",
+      waiting: s.coolQ,
+      inProgress: s.cool.length,
+      bars: s.cool.slice(0, 12).map(c => bar(pct(c))),
+      label: s.cool.length + " of " + CFG.coolSlots + " slots" + (s.cool.length > 12 ? " (first 12 shown)" : "")
+    },
+    {
+      key: "box", name: "Boxer", icon: ICON.box, rule: "Batch of " + CFG.boxBatch + " every " + TIME.box + " min",
+      waiting: s.boxQ,
+      inProgress: s.box ? s.box.n : 0,
+      bars: s.box ? [bar(pct(s.box))] : [],
+      label: s.box ? "Packing " + s.box.n : "Idle"
+    }
+  ];
+
+  const money = document.getElementById("money");
+  money.textContent = (s.money < 0 ? "-" : "") + "£" + Math.abs(s.money).toFixed(2);
+  // Green when up, red when down, plain ink at zero.
+  money.style.color = s.money > 0 ? "var(--green)" : s.money < 0 ? "var(--red)" : "var(--ink)";
+  document.getElementById("wip").textContent = wip(s);
+  const lead = leadTime();
+  document.getElementById("lead").textContent = lead === null ? "—" : lead === Infinity ? ">7 days" : fmt(lead);
+  document.getElementById("avgLead").textContent = s.totals.box ? fmt(Math.round(s.leadSum / s.totals.box)) : "—";
+
+  const cards = stations.map(st => {
+    const out = rate(s.done[st.key]);
+    // Minutes counted: all of them, or (with the checkbox) from the station's first item on.
+    // After Finish day, a station that has processed its last item stops counting minutes.
+    const first = s.first[st.key];
+    const end = stationDone(s, st.key) ? (s.last[st.key] ?? 0) : s.t;
+    const span = !BUSY_FROM_FIRST ? end : first === null ? 0 : end - first + 1;
+    const busyPct = span ? (s.busy[st.key] / span * 100).toFixed(0) + "%" : BUSY_FROM_FIRST ? "—" : "0%";
+    return '<article class="station">' +
+      '<div class="station-head">' + st.icon +
+        '<div><h2>' + st.name + '</h2><p class="muted">' + st.rule + '</p></div>' +
+      '</div>' +
+      '<div class="pairs">' +
+        '<div class="pair wait"><span class="n">' + st.waiting + '</span><span class="l">Waiting</span></div>' +
+        '<div class="pair prog"><span class="n">' + st.inProgress + '</span><span class="l">In progress</span></div>' +
+      '</div>' +
+      '<div class="progress">' + st.bars.join("") + '</div>' +
+      '<div class="label-row"><span class="progress-label">' + st.label + '</span>' +
+        (SHOW_REWORK ? '<button type="button" class="rework" data-rework="' + st.key + '"' + (st.inProgress ? '' : ' disabled') +
+        ' title="Redo the work in progress here: it starts its cycle again from zero">Rework</button>' : '') + '</div>' +
+      '<div class="out"><span>Busy <span class="busy">' + busyPct + '</span></span><span>Out <span class="mono">' + r1(out) + '/hr</span></span></div>' +
+    '</article>';
+  });
+
+  const saleRule = RATE.sale === null ? "Sells all" : "Sells up to " + r1(RATE.sale) + "/hr";
+  cards.push(
+    '<article class="station slim">' +
+      '<div class="station-head">' + ICON.ready +
+        '<div><h2>Ready to ship</h2><p class="muted">' + saleRule + '</p></div>' +
+      '</div>' +
+      '<div class="pairs">' +
+        '<div class="pair wait"><span class="n">' + s.ready + '</span><span class="l">Ready to ship</span></div>' +
+        '<div class="pair sold"><span class="n">' + s.totals.sold + '</span><span class="l">Sold</span></div>' +
+      '</div>' +
+      '<div class="progress"></div>' +
+      '<div class="progress-label">&nbsp;</div>' +
+      '<div class="out"><span>Sold <span class="mono">' + r1(rate(s.done.sold)) + '/hr</span></span></div>' +
+    '</article>'
+  );
+
+  const storeRule = RATE.store === null ? "No limit on mix" : "Releases mix at " + r1(RATE.store) + "/hr";
+  cards.unshift(
+    '<article class="station slim">' +
+      '<div class="station-head">' + ICON.store +
+        '<div><h2>Store cupboard</h2><p class="muted">' + storeRule + '</p></div>' +
+      '</div>' +
+      '<div class="pairs">' +
+        '<div class="pair wait"><span class="n">' + s.totals.store + '</span><span class="l">Mix released</span></div>' +
+      '</div>' +
+      '<div class="progress"></div>' +
+      '<div class="progress-label">&nbsp;</div>' +
+      '<div class="out"><span>Out <span class="mono">' + r1(rate(s.done.store)) + '/hr</span></span></div>' +
+    '</article>'
+  );
+
+  document.getElementById("stations").innerHTML = cards.join("");
+}
+
+function rateText(k, value) {
+  if (k === "store") return value === null ? "No limit" : "Releases " + r1(value) + "/hr";
+  return value === null ? "No limit" : "Up to " + r1(value) + " trays/hr sold";
+}
+function stationText(k, batch, time) {
+  return "= " + r1(batch * 60 / time) + (k === "cool" ? " trays/hr through " + batch + " slots" : " trays/hr");
+}
+
+const RATE_KEYS = ["store", "sale"];
+const STATION_KEYS = ["mix", "tray", "oven", "cool", "box"];
+// Batch sizes and process times are whole numbers, 1 or more.
+function wholeFrom(raw) {
+  const v = Number(raw);
+  return raw !== "" && Number.isInteger(v) && v >= 1 ? v : null;
+}
+function rateFrom(raw) {
+  return raw === "" ? null : Number(raw) > 0 ? Number(raw) : undefined;
+}
+
+// The note beside each row updates as you type, before Apply.
+function refreshInfo(k) {
+  const info = document.getElementById("info-" + k);
+  if (RATE_KEYS.includes(k)) {
+    const v = rateFrom(document.getElementById("rate-" + k).value);
+    info.textContent = v === undefined ? "Enter a number above 0, or leave blank" : rateText(k, v);
+    return;
+  }
+  const b = wholeFrom(document.getElementById("batch-" + k).value);
+  const t = wholeFrom(document.getElementById("time-" + k).value);
+  info.textContent = b === null || t === null ? "Whole numbers, 1 or more" : stationText(k, b, t);
+}
+
+function buildRates() {
+  document.getElementById("rates").innerHTML = RATE_KEYS.map(k => {
+    const val = RATE[k] === null ? "" : RATE[k];
+    return '<label for="rate-' + k + '">' + LABEL[k] + '</label>' +
+      '<input id="rate-' + k + '" type="number" min="1" step="1" placeholder="No limit" value="' + val + '">' +
+      '<span class="info" id="info-' + k + '">' + rateText(k, RATE[k]) + '</span>';
+  }).join("");
+  document.getElementById("times").innerHTML =
+    '<span></span><span class="col-head">' + 'Batch (trays)' + '</span><span class="col-head">Time (min)</span><span></span>' +
+    STATION_KEYS.map(k =>
+      '<label for="batch-' + k + '">' + LABEL[k] + '</label>' +
+      '<input id="batch-' + k + '" type="number" min="1" step="1" value="' + BATCH[k] + '" aria-label="' + LABEL[k] + (k === "cool" ? ' slots' : ' batch size') + '">' +
+      '<input id="time-' + k + '" type="number" min="1" step="1" value="' + TIME[k] + '" aria-label="' + LABEL[k] + ' process time in minutes">' +
+      '<span class="info" id="info-' + k + '">' + stationText(k, BATCH[k], TIME[k]) + '</span>'
+    ).join("");
+
+  RATE_KEYS.forEach(k => document.getElementById("rate-" + k).addEventListener("input", () => refreshInfo(k)));
+  STATION_KEYS.forEach(k => {
+    document.getElementById("batch-" + k).addEventListener("input", () => refreshInfo(k));
+    document.getElementById("time-" + k).addEventListener("input", () => refreshInfo(k));
+  });
+}
+
+function applyFromInputs() {
+  stopAnim();
+  RATE_KEYS.forEach(k => {
+    const v = rateFrom(document.getElementById("rate-" + k).value);
+    if (v !== undefined) RATE[k] = v;
+  });
+  STATION_KEYS.forEach(k => {
+    const b = wholeFrom(document.getElementById("batch-" + k).value);
+    const t = wholeFrom(document.getElementById("time-" + k).value);
+    if (b !== null) BATCH[k] = b;
+    if (t !== null) TIME[k] = t;
+  });
+  applyConfig();
+  buildRates();   // show the values actually in use (invalid entries are dropped)
+  S = fresh();
+  setStepsDisabled(false);
+  render();
+}
+
+// Steps of 1 minute happen at once. Larger steps animate one minute at a time:
+// 200 ms per minute for +5 min (1 s total), 100 ms for +20 min (2 s), about 33 ms
+// for +1 hr (2 s) and about 21 ms for +8 hr (10 s).
+// A run in progress is kept in JOB: step() advances one minute and returns true when
+// the run is over. ANIM is the interval while it plays; Pause clears ANIM but keeps
+// JOB so Resume carries on from the same minute.
+let ANIM = null;
+let JOB = null;
+function stopAnim() {
+  if (ANIM) { clearInterval(ANIM); ANIM = null; }
+  JOB = null;
+  setStepsDisabled(false);
+}
+function play(step, delay) {
+  stopAnim();
+  JOB = { step, delay };
+  resume();
+}
+function resume() {
+  ANIM = setInterval(() => { if (JOB.step()) stopAnim(); }, JOB.delay);
+  setStepsDisabled(true);
+}
+// While paused the step buttons work again; pressing one drops the rest of the paused run.
+function pause() {
+  clearInterval(ANIM);
+  ANIM = null;
+  setStepsDisabled(false);
+}
+// Once the day is finishing or finished, the step buttons stay off until Reset.
+function setStepsDisabled(on) {
+  const closed = S && S.closing;
+  document.querySelectorAll("[data-step]").forEach(b => { b.disabled = on || closed; });
+  const finish = document.getElementById("finish");
+  finish.disabled = on || closed;
+  finish.textContent = !closed ? "Finish day" : wip(S) > 0 ? "Finishing…" : "Day finished";
+  const pauseBtn = document.getElementById("pause");
+  pauseBtn.disabled = !JOB;
+  pauseBtn.textContent = JOB && !ANIM ? "Resume" : "Pause";
+}
+let QUICK = false;
+function advance(minutes) {
+  if (minutes <= 1 || QUICK) {
+    stopAnim();
+    for (let i = 0; i < minutes; i++) tick();
+    render();
+    return;
+  }
+  let left = minutes;
+  const delay = minutes <= 5 ? 200 : minutes <= 20 ? 100 : minutes <= 60 ? 2000 / 60 : 10000 / 480;
+  play(() => {
+    tick();
+    render();
+    left -= 1;
+    return left <= 0;
+  }, delay);
+}
+
+// Finish day: nothing new goes in, then the line runs until no trays are left.
+// It animates at the +1 hr pace (about 33 ms per minute) unless quick mode is on.
+function finishDay() {
+  stopAnim();
+  S.closing = true;
+  if (QUICK || wip(S) === 0) {
+    while (wip(S) > 0) tick();
+    render();
+    stopAnim();
+    return;
+  }
+  play(() => {
+    tick();
+    render();
+    return wip(S) === 0;
+  }, 2000 / 60);
+}
+
+// Rework: the work in progress at station k has to be done again, so its cycle
+// restarts from now. On the cooling rack, only the tray closest to done restarts.
+// A running animation carries on.
+function rework(k) {
+  const item = k === "cool"
+    ? S.cool.reduce((a, c) => (!a || c.until < a.until ? c : a), null)
+    : S[k];
+  if (!item) return;
+  item.start = S.t;
+  item.until = S.t + dur(TIME[k]);
+  render();
+}
+
+document.querySelectorAll("[data-step]").forEach(btn => {
+  btn.addEventListener("click", () => advance(Number(btn.dataset.step)));
+});
+document.getElementById("finish").addEventListener("click", finishDay);
+// The station cards are redrawn every minute while time runs, so a click could land on a
+// button that was replaced mid-press. Act on pointerdown instead; keyboard presses
+// arrive as a click with detail 0.
+const stationsEl = document.getElementById("stations");
+function onRework(e) {
+  const btn = e.target.closest("[data-rework]");
+  if (!btn || btn.disabled) return;
+  if (e.type === "pointerdown" && e.button !== 0) return;
+  if (e.type === "click" && e.detail !== 0) return;
+  rework(btn.dataset.rework);
+}
+stationsEl.addEventListener("pointerdown", onRework);
+stationsEl.addEventListener("click", onRework);
+document.getElementById("pause").addEventListener("click", () => {
+  if (!JOB) return;
+  if (ANIM) pause(); else resume();
+});
+document.getElementById("reset").addEventListener("click", () => {
+  stopAnim();
+  S = fresh();
+  setStepsDisabled(false);
+  render();
+});
+document.getElementById("apply").addEventListener("click", () => {
+  applyFromInputs();
+  document.getElementById("settingsDlg").close();
+});
+// Dialogs: the icons open them; the ✕, Esc or a tap on the dimmed backdrop closes them.
+document.getElementById("openSettings").addEventListener("click", () => document.getElementById("settingsDlg").showModal());
+document.getElementById("openAbout").addEventListener("click", () => document.getElementById("aboutDlg").showModal());
+document.querySelectorAll("dialog.dlg").forEach(dlg => {
+  dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+  dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+});
+document.getElementById("showRework").addEventListener("change", e => {
+  SHOW_REWORK = e.target.checked;
+  render();
+});
+document.getElementById("busyFromFirst").addEventListener("change", e => {
+  BUSY_FROM_FIRST = e.target.checked;
+  render();
+});
+document.getElementById("fullBatch").addEventListener("change", e => {
+  FULL = e.target.checked;
+});
+document.getElementById("randomMode").addEventListener("change", e => {
+  RANDOM = e.target.checked;
+});
+document.getElementById("randomPct").addEventListener("input", e => {
+  const v = Number(e.target.value);
+  if (v >= 0) RANDOM_PCT = v;
+});
+
+document.getElementById("quickMode").addEventListener("change", e => {
+  QUICK = e.target.checked;
+});
+
+applyConfig();
+buildRates();
+S = fresh();
+render();
+</script>
+
+</body></html>
